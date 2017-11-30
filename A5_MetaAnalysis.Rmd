@@ -1,0 +1,176 @@
+---
+title: "Assignment 5 - Meta-analysis of pitch in schizophrenia"
+author: "Riccardo Fusaroli"
+date: "3/7/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Building on the shoulders of giants: meta-analysis
+
+## Questions to be answered
+
+1. What is the current evidence for distinctive patterns of pitch mean and pitch sd in schizophrenia? Report how many papers report quantitative estimates, your method to analyze them, the estimated effect size of the difference (mean effect size and standard error for pitch mean, same for pitch sd) and forest plots representing it. 
+```{r setup, include=FALSE}
+setwd("~/OneDrive/3 Semester/Experimental Methods 3/Assignment 5")
+data = read.csv("Data.csv", sep = ";")
+
+library(pacman) 
+library(lmerTest)
+p_load(metafor)
+
+#Calculating Cohen's d (yi) and the variance of Cohen's d (vi). Adding the values to the data
+PitchMean=escalc('SMD', n1i=SampleSizeSchizo, n2i=SampleSizeContros, m1i=PitchMeanSchizo, m2i=PitchMeanControls, sd1i=PitchMeanSchizoSD, sd2i=PitchMeanControlsSD, data = data)
+
+#Doing an lmer on the studies with Cohen's d, only four studies
+m1 <- lmer(yi ~ 1 + (1 | Article), weights = 1/vi, data=PitchMean, control=lmerControl(check.nobs.vs.nlev="ignore", check.nobs.vs.nRE="ignore"))
+summary(m1)
+
+#Meta-analysis optimization: 
+res <- rma(yi, vi, data = PitchMean, slab=Article) 
+forest(res)
+
+#Calcuclating the number of participants in the studies used
+PitchMean2 = subset(PitchMean[PitchMean$vi > 0,])
+sum(PitchMean2$SampleSizeSchizo, na.rm = TRUE)
+sum(PitchMean2$SampleSizeContros, na.rm = TRUE)
+
+#Repeating the procedure for the SD of the SDs. 
+PitchSD=escalc('SMD', n1i=SampleSizeSchizo, n2i=SampleSizeContros, m1i=PitchSDSchizo, m2i=PitchSDControls, sd1i=PitchSDSchizoSD, sd2i=PitchSDControlsSD, data = data)
+
+m2 <- lmer(yi ~ 1 + (1 | Article), weights = 1/vi, data=PitchSD, control=lmerControl(check.nobs.vs.nlev="ignore", check.nobs.vs.nRE="ignore"))
+summary(m2)
+
+#(beta = -0.125, SE = 0.579, t() = -0.216)
+#Meta-analysis optimization: 
+res2 <- rma(yi, vi, data = PitchSD, slab=Article) 
+forest(res2)
+
+#Calcuclating the number of participants in the studies used
+PitchSD2 = subset(PitchSD[PitchSD$vi > 0,])
+sum(PitchSD2$SampleSizeSchizo, na.rm = TRUE)
+sum(PitchSD2$SampleSizeContros, na.rm = TRUE)
+
+```
+
+#Mean:We calculate Cohen's d and end up with four studies. We do an lmer test on Cohen's d, with each study as random effect. There were 166 schizophrenias and 95 controls as participants. The overall estimated difference (Cohen’s d) in pitch variability between the Scizophrenias and the control groups was 0.177, SE= 0.169. 
+
+#SD: We calculate Cohen's d and end up with six studies. We do an lmer test on Cohen's d, with each study as random effect. There were 257 schizophrenias and 156 controls as participants. The overall estimated difference (Cohen’s d) in pitch variability between the Scizophrenias and the control groups was -0.125, SE= 0.579.  
+
+#Procedure only once, but report both SD and mean. 
+
+2. Do the results match your own analysis from Assignment 3? If you add your results to the meta-analysis, do the estimated effect sizes change? Report the new estimates and the new forest plots.
+
+```{r setup, include=FALSE}
+own_data = read.csv("Schizophrenia_data.csv")
+own_data = own_data[-1:-2]
+
+PitchMeanSchizo = mean(own_data$mean[own_data$Diagnosis == "Schizophrenia"])
+PitchMeanControls = mean(own_data$mean[own_data$Diagnosis == "Control"])
+
+PitchSDSchizo = mean(own_data$SD[own_data$Diagnosis == "Schizophrenia"])
+PitchSDControls = mean(own_data$SD[own_data$Diagnosis == "Control"])
+
+PitchMeanSchizoSD = sd(own_data$mean[own_data$Diagnosis == "Schizophrenia"])
+PitchMeanControlsSD = sd(own_data$mean[own_data$Diagnosis == "Control"])
+
+PitchSDSchizoSD = sd(own_data$SD[own_data$Diagnosis == "Schizophrenia"])
+PitchSDControlsSD = sd(own_data$SD[own_data$Diagnosis == "Control"])
+
+SampleSizeSchizo = as.numeric(length(unique(own_data$Subject[own_data$Diagnosis == "Schizophrenia"])))
+SampleSizeContros = as.numeric(length(unique(own_data$Subject[own_data$Diagnosis == "Control"])))
+Article = "Own_Analysis"
+Year = 2017
+own_analysis = data.frame(Article, Year, SampleSizeSchizo, SampleSizeContros, PitchMeanControls, PitchMeanControlsSD, PitchMeanSchizo,  PitchMeanSchizoSD, PitchSDControls, PitchSDControlsSD, PitchSDSchizo, PitchSDSchizoSD)
+
+all_data = rbind(own_analysis,data)
+
+
+#Running the analysis again, now with our own study as well.
+#Calculating Cohen's d (yi) and the variance of Cohen's d (vi). Adding the values to the data
+EffectsizeMean=escalc('SMD', n1i=SampleSizeSchizo, n2i=SampleSizeContros, m1i=PitchMeanSchizo, m2i=PitchMeanControls, sd1i=PitchMeanSchizoSD, sd2i=PitchMeanControlsSD, data = all_data)
+
+#Doing an lmer on the studies with Cohen's d, only four studies
+m3 <- lmer(yi ~ 1 + (1 | Article), weights = 1/vi, data=EffectsizeMean, control=lmerControl(check.nobs.vs.nlev="ignore", check.nobs.vs.nRE="ignore"))
+summary(m3)
+
+#Meta-analysis optimization: 
+res3 <- rma(yi, vi, data = EffectsizeMean, slab=Article) 
+forest(res3)
+
+#Calcuclating the number of participants in the studies used
+EffectsizeMean2 = subset(EffectsizeMean[EffectsizeMean$vi > 0,])
+sum(EffectsizeMean2$SampleSizeSchizo, na.rm = TRUE)
+sum(EffectsizeMean2$SampleSizeContros, na.rm = TRUE)
+
+#Repeating the procedure for the SD of the SDs. 
+EffectsizeSD=escalc('SMD', n1i=SampleSizeSchizo, n2i=SampleSizeContros, m1i=PitchSDSchizo, m2i=PitchSDControls, sd1i=PitchSDSchizoSD, sd2i=PitchSDControlsSD, data = all_data)
+
+m4 <- lmer(yi ~ 1 + (1 | Article), weights = 1/vi, data=EffectsizeSD, control=lmerControl(check.nobs.vs.nlev="ignore", check.nobs.vs.nRE="ignore"))
+summary(m4)
+
+#Meta-analysis optimization: 
+res4 <- rma(yi, vi, data = EffectsizeSD, slab=Article) 
+forest(res4)
+
+#Calcuclating the number of participants in the studies used
+EffectsizeSD2 = subset(EffectsizeSD[EffectsizeSD$vi > 0,])
+sum(EffectsizeSD2$SampleSizeSchizo, na.rm = TRUE)
+sum(EffectsizeSD2$SampleSizeContros, na.rm = TRUE)
+
+```
+
+#Mean:We calculate Cohen's d and end up with five studies. We do an lmer test on Cohen's d, with each study as random effect. There were 241 schizophrenias and 169 controls as participants. The overall estimated difference (Cohen’s d) in pitch variability between the Scizophrenias and the control groups was 0.172, SE= 0.131. 
+
+#SD: We calculate Cohen's d and end up with seven studies. We do an lmer test on Cohen's d, with each study as random effect. There were 332 schizophrenias and 230 controls as participants. The overall estimated difference (Cohen’s d) in pitch variability between the Scizophrenias and the control groups was -0.119, SE= 0.434. 
+
+3. Assess the quality of the literature: report and comment on heterogeneity of the studies (tau, I2), on publication bias (funnel plot), and on influential studies.
+
+```{r setup, include=FALSE}
+summary(res3)
+# tau^2 (estimated amount of total heterogeneity) = 0.021, SE = 0.055. I^2 (total heterogeneity/total variability) = 26.15 %. The higher I^2 value the higher the percentage is that they come from different population. 
+
+summary(res4)
+# tau^2 (estimated amount of total heterogeneity) = 3.499, SE = 2.07. I^2 (total heterogeneity/total variability) = 98.18 %. The higher I^2 value the higher the percentage is that they come from different population. The high value is due to Cohen et al. 2014. 
+
+funnel(res3, main = "Random-Effects Model",xlab = "Standardized Mean Difference")
+regtest(res3)
+ranktest(res3)
+
+funnel(res4, main = "Random-Effects Model",xlab = "Standardized Mean Difference")
+regtest(res4)
+ranktest(res4)
+#From slides: Plotting effect size against standard error. That is, we check whether the larger the effect size the more unreliable the estimate (otherwise said, whether only bad studies have good results)
+
+#Testing influential studies:
+inf3 <- influence(res3) 
+print(inf3) 
+plot(inf3)
+
+#Martinez et al 2015 is significant meaning that it has a lot of influence on the analysis, because the study is very different from the other studies and thus schews the place of the funnel plot in one direction. 
+
+inf4 <- influence(res4) 
+print(inf4) 
+plot(inf4)
+
+#From slides: Lots of small variations between studies or one or two ͞outliers͟, aka, influential studies, that is, if we remove that study the results change quite radically 
+
+```
+
+#When you have model1 you can do summary(model1), tau^2 - tells you how spread the area covered by the plots are, the variance. I^2 - the percentage of tau^2 that could not be explained by uncertainty (if the data is outside the confidence interval (if studies do not overlap in the forest plot)). More on Tuesday
+
+## Tips on the process to follow:
+
+- Download the data on all published articles analyzing pitch in schizophrenia: https://www.dropbox.com/s/pmgw8wzc308so1p/Data.csv?dl=0
+- Following the procedure in the slides calculate effect size and standard error of the effect size per each study. N.B. we focus on pitch mean and pitch standard deviation.
+ . first try using lmer (to connect to what you know of mixed effects models)
+ . then use rma() (to get some juicy additional statistics)
+
+- Build a forest plot of the results (forest(model))
+ 
+- Go back to Assignment 3, add your own study to the data table, and re-run meta-analysis. Do the results change?
+
+- Now look at the output of rma() and check tau and I2
