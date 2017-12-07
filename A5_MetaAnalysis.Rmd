@@ -56,11 +56,6 @@ sum(PitchSD2$SampleSizeContros, na.rm = TRUE)
 
 ```
 
-#Mean:We calculate Cohen's d and end up with four studies. We do an lmer test on Cohen's d, with each study as random effect. There were 166 schizophrenias and 95 controls as participants. The overall estimated difference (Cohen’s d) in pitch variability between the Scizophrenias and the control groups was 0.177, SE= 0.169. 
-
-#SD: We calculate Cohen's d and end up with six studies. We do an lmer test on Cohen's d, with each study as random effect. There were 257 schizophrenias and 156 controls as participants. The overall estimated difference (Cohen’s d) in pitch variability between the Scizophrenias and the control groups was -0.125, SE= 0.579.  
-
-#Procedure only once, but report both SD and mean. 
 
 2. Do the results match your own analysis from Assignment 3? If you add your results to the meta-analysis, do the estimated effect sizes change? Report the new estimates and the new forest plots.
 
@@ -123,9 +118,6 @@ sum(EffectsizeSD2$SampleSizeContros, na.rm = TRUE)
 
 ```
 
-#Mean:We calculate Cohen's d and end up with five studies. We do an lmer test on Cohen's d, with each study as random effect. There were 241 schizophrenias and 169 controls as participants. The overall estimated difference (Cohen’s d) in pitch variability between the Scizophrenias and the control groups was 0.172, SE= 0.131. 
-
-#SD: We calculate Cohen's d and end up with seven studies. We do an lmer test on Cohen's d, with each study as random effect. There were 332 schizophrenias and 230 controls as participants. The overall estimated difference (Cohen’s d) in pitch variability between the Scizophrenias and the control groups was -0.119, SE= 0.434. 
 
 3. Assess the quality of the literature: report and comment on heterogeneity of the studies (tau, I2), on publication bias (funnel plot), and on influential studies.
 
@@ -143,20 +135,18 @@ ranktest(res3)
 funnel(res4, main = "Random-Effects Model",xlab = "Standardized Mean Difference")
 regtest(res4)
 ranktest(res4)
-#From slides: Plotting effect size against standard error. That is, we check whether the larger the effect size the more unreliable the estimate (otherwise said, whether only bad studies have good results)
+
 
 #Testing influential studies:
 inf3 <- influence(res3) 
 print(inf3) 
 plot(inf3)
 
-#Martinez et al 2015 is significant meaning that it has a lot of influence on the analysis, because the study is very different from the other studies and thus schews the place of the funnel plot in one direction. 
 
 inf4 <- influence(res4) 
 print(inf4) 
 plot(inf4)
 
-#From slides: Lots of small variations between studies or one or two ͞outliers͟, aka, influential studies, that is, if we remove that study the results change quite radically 
 
 ```
 
